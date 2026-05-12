@@ -8,6 +8,20 @@ export function listar(req, res) {
   res.json(tarefas);
 }
 
+// GET /tarefas/usuario/:usuarioId — lista todas as tarefas de um usuário
+export function listarPorUsuario(req, res) {
+  const usuarioId = Number(req.params.usuarioId);
+
+  // valida se o usuário existe
+  const usuarioExiste = usuarios.some(u => u.id === usuarioId);
+  if (!usuarioExiste) {
+    return res.status(404).json({ erro: 'Usuário não encontrado' });
+  }
+
+  const tarefasDoUsuario = tarefas.filter(t => t.usuarioId === usuarioId);
+  res.json(tarefasDoUsuario);
+}
+
 // GET /tarefas/:id
 export function buscarPorId(req, res) {
   const id = Number(req.params.id);

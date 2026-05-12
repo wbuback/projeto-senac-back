@@ -5,8 +5,9 @@ import * as controller from '../controllers/tarefasController.js';
 
 const router = Router();
 
-router.get('/', controller.listar);          // GET    /tarefas
-router.get('/:id', controller.buscarPorId);  // GET    /tarefas/:id
+router.get('/', controller.listar);                    // GET    /tarefas
+router.get('/usuario/:usuarioId', controller.listarPorUsuario);  // GET    /tarefas/usuario/:usuarioId
+router.get('/:id', controller.buscarPorId);           // GET    /tarefas/:id
 router.post('/', controller.criar);          // POST   /tarefas
 router.put('/:id', controller.atualizar);    // PUT    /tarefas/:id
 router.delete('/:id', controller.remover);   // DELETE /tarefas/:id
