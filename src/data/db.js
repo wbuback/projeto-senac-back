@@ -8,6 +8,7 @@ export const usuarios = [
     nome: 'Buba',
     email: 'buba@example.com',
     telefone: '27999999999',
+    dataNascimento: '1995-03-15',
     senha: '123456' // sem hash propositalmente — apenas para fins didáticos
   },
   {
@@ -15,6 +16,7 @@ export const usuarios = [
     nome: 'Maria Silva',
     email: 'maria.silva@example.com',
     telefone: '11988888888',
+    dataNascimento: '1990-07-22',
     senha: 'senha123'
   },
   {
@@ -22,6 +24,7 @@ export const usuarios = [
     nome: 'João Santos',
     email: 'joao.santos@example.com',
     telefone: '21987654321',
+    dataNascimento: '1998-11-08',
     senha: 'senha456'
   },
   {
@@ -29,6 +32,7 @@ export const usuarios = [
     nome: 'Ana Oliveira',
     email: 'ana.oliveira@example.com',
     telefone: '31986543210',
+    dataNascimento: '1992-05-19',
     senha: 'senha789'
   },
   {
@@ -36,6 +40,7 @@ export const usuarios = [
     nome: 'Carlos Costa',
     email: 'carlos.costa@example.com',
     telefone: '85999999999',
+    dataNascimento: '1988-09-30',
     senha: 'senha101'
   }
 ];

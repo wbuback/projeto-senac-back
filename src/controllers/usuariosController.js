@@ -21,12 +21,12 @@ export function buscarPorId(req, res) {
 
 // POST /usuarios — cria um novo usuário
 export function criar(req, res) {
-  const { nome, email, telefone, senha } = req.body;
+  const { nome, email, telefone, dataNascimento, senha } = req.body;
 
   // validação simples dos campos obrigatórios
-  if (!nome || !email || !telefone || !senha) {
+  if (!nome || !email || !telefone || !dataNascimento || !senha) {
     return res.status(400).json({
-      erro: 'nome, email, telefone e senha são obrigatórios'
+      erro: 'nome, email, telefone, dataNascimento e senha são obrigatórios'
     });
   }
 
@@ -35,6 +35,7 @@ export function criar(req, res) {
     nome,
     email,
     telefone,
+    dataNascimento,
     senha // armazenado em texto puro — só para estudo, NÃO use assim em produção
   };
 
@@ -51,7 +52,7 @@ export function atualizar(req, res) {
     return res.status(404).json({ erro: 'Usuário não encontrado' });
   }
 
-  const { nome, email, telefone, senha } = req.body;
+  const { nome, email, telefone, dataNascimento, senha } = req.body;
 
   // spread + short-circuit: só sobrescreve campos enviados no body
   usuarios[indice] = {
@@ -59,6 +60,7 @@ export function atualizar(req, res) {
     ...(nome && { nome }),
     ...(email && { email }),
     ...(telefone && { telefone }),
+    ...(dataNascimento && { dataNascimento }),
     ...(senha && { senha })
   };
 
