@@ -1,93 +1,32 @@
-// tarefasController.js — lógica do recurso "tarefas"
-// cada tarefa pertence a um usuário (relação via usuarioId).
+import { getDatabase } from '../data/db.js';
 
-import { tarefas, usuarios, contadores } from '../data/db.js';
-
-// GET /tarefas — lista todas
-export function listar(req, res) {
-  res.json(tarefas);
+export async function listar(req, res) {
+    try {
+        const db = await getDatabase();
+        const tarefas = await db.all('SELECT * FROM tarefas');
+        // Mapeia inteiro do SQLite (0/1) de volta para o booleano do JS
+        const resposta = tarefas.map(t => ({ ...t, concluida: t.concluida === 1 }));
+        res.json(resposta);
+    } catch (erro) {
+        res.status(500).json({ mensagem: 'Erro ao buscar tarefas.' });
+    }
 }
 
-// GET /tarefas/usuario/:usuarioId — lista todas as tarefas de um usuário
-export function listarPorUsuario(req, res) {
-  const usuarioId = Number(req.params.usuarioId);
+export async function criar(req, res) {
+    const { titulo, usuarioId } = req.body;
+    if (!titulo || !usuarioId) return res.status(400).json({ mensagem: 'Campos obrigatórios ausentes.' });
 
-  // valida se o usuário existe
-  const usuarioExiste = usuarios.some(u => u.id === usuarioId);
-  if (!usuarioExiste) {
-    return res.status(404).json({ erro: 'Usuário não encontrado' });
-  }
-
-  const tarefasDoUsuario = tarefas.filter(t => t.usuarioId === usuarioId);
-  res.json(tarefasDoUsuario);
-}
-
-// GET /tarefas/:id
-export function buscarPorId(req, res) {
-  const id = Number(req.params.id);
-  const tarefa = tarefas.find(t => t.id === id);
-
-  if (!tarefa) {
-    return res.status(404).json({ erro: 'Tarefa não encontrada' });
-  }
-  res.json(tarefa);
-}
-
-// POST /tarefas — cria nova tarefa vinculada a um usuário existente
-export function criar(req, res) {
-  const { titulo, usuarioId, concluida = false } = req.body;
-
-  if (!titulo || !usuarioId) {
-    return res.status(400).json({ erro: 'titulo e usuarioId são obrigatórios' });
-  }
-
-  // valida integridade referencial: usuário precisa existir no array
-  const usuarioExiste = usuarios.some(u => u.id === Number(usuarioId));
-  if (!usuarioExiste) {
-    return res.status(400).json({ erro: 'Usuário informado não existe' });
-  }
-
-  const novaTarefa = {
-    id: contadores.tarefas++,
-    titulo,
-    concluida: Boolean(concluida),
-    usuarioId: Number(usuarioId)
-  };
-
-  tarefas.push(novaTarefa);
-  res.status(201).json(novaTarefa);
-}
-
-// PUT /tarefas/:id — atualização parcial
-export function atualizar(req, res) {
-  const id = Number(req.params.id);
-  const indice = tarefas.findIndex(t => t.id === id);
-
-  if (indice === -1) {
-    return res.status(404).json({ erro: 'Tarefa não encontrada' });
-  }
-
-  const { titulo, concluida, usuarioId } = req.body;
-
-  tarefas[indice] = {
-    ...tarefas[indice],
-    ...(titulo && { titulo }),
-    ...(concluida !== undefined && { concluida: Boolean(concluida) }),
-    ...(usuarioId && { usuarioId: Number(usuarioId) })
-  };
-
-  res.json(tarefas[indice]);
-}
-
-// DELETE /tarefas/:id
-export function remover(req, res) {
-  const id = Number(req.params.id);
-  const indice = tarefas.findIndex(t => t.id === id);
-
-  if (indice === -1) {
-    return res.status(404).json({ erro: 'Tarefa não encontrada' });
-  }
-
-  const [removida] = tarefas.splice(indice, 1);
-  res.json({ mensagem: 'Tarefa removida', tarefa: removida });
+    try {
+        const db = await getDatabase();
+        const resultado = await db.run(
+            'INSERT INTO tarefas (titulo, usuarioId, concluida) VALUES (?, ?, 0)',
+            [titulo, usuarioId]
+        );
+        res.status(201).json({ id: resultado.lastID, titulo, concluida: false, usuarioId });
+    } catch (erro) {
+        if (erro.message.includes('FOREIGN KEY constraint failed')) {
+            return res.status(400).json({ mensagem: 'O usuarioId informado não existe.' });
+        }
+        res.status(500).json({ mensagem: 'Erro ao criar tarefa.' });
+    }
 }

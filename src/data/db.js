@@ -1,68 +1,36 @@
-// db.js — "banco" em memória
-// arrays simulam tabelas; contadores guardam o próximo id de cada recurso.
-// usar contador (e não array.length) evita reuso de id após exclusões.
+import sqlite3 from 'sqlite3';
+import { open } from 'sqlite';
 
-export const usuarios = [
-  {
-    id: 1,
-    nome: 'Buba',
-    email: 'buba@example.com',
-    telefone: '27999999999',
-    dataNascimento: '1995-03-15',
-    senha: '123456' // sem hash propositalmente — apenas para fins didáticos
-  },
-  {
-    id: 2,
-    nome: 'Maria Silva',
-    email: 'maria.silva@example.com',
-    telefone: '11988888888',
-    dataNascimento: '1990-07-22',
-    senha: 'senha123'
-  },
-  {
-    id: 3,
-    nome: 'João Santos',
-    email: 'joao.santos@example.com',
-    telefone: '21987654321',
-    dataNascimento: '1998-11-08',
-    senha: 'senha456'
-  },
-  {
-    id: 4,
-    nome: 'Ana Oliveira',
-    email: 'ana.oliveira@example.com',
-    telefone: '31986543210',
-    dataNascimento: '1992-05-19',
-    senha: 'senha789'
-  },
-  {
-    id: 5,
-    nome: 'Carlos Costa',
-    email: 'carlos.costa@example.com',
-    telefone: '85999999999',
-    dataNascimento: '1988-09-30',
-    senha: 'senha101'
-  }
-];
+let dbConnection = null;
 
-export const tarefas = [
-  { id: 1, titulo: 'Estudar Node', concluida: false, usuarioId: 1 },
-  { id: 2, titulo: 'Criar API REST', concluida: true, usuarioId: 1 },
-  { id: 3, titulo: 'Estudar React', concluida: false, usuarioId: 1 },
-  { id: 4, titulo: 'Fazer compras', concluida: true, usuarioId: 2 },
-  { id: 5, titulo: 'Pagar conta de luz', concluida: false, usuarioId: 2 },
-  { id: 6, titulo: 'Limpar casa', concluida: false, usuarioId: 2 },
-  { id: 7, titulo: 'Revisar código', concluida: true, usuarioId: 3 },
-  { id: 8, titulo: 'Debugar aplicação', concluida: false, usuarioId: 3 },
-  { id: 9, titulo: 'Escrever documentação', concluida: false, usuarioId: 4 },
-  { id: 10, titulo: 'Testes automatizados', concluida: true, usuarioId: 4 },
-  { id: 11, titulo: 'Deploy para produção', concluida: false, usuarioId: 4 },
-  { id: 12, titulo: 'Reunião com cliente', concluida: true, usuarioId: 5 },
-  { id: 13, titulo: 'Planejamento sprint', concluida: false, usuarioId: 5 }
-];
+export async function getDatabase() {
+    if (!dbConnection) {
+        dbConnection = await open({
+            filename: './src/data/database.db',
+            driver: sqlite3.Database
+        });
 
-// objeto centralizando os próximos ids de cada coleção
-export const contadores = {
-  usuarios: 6,
-  tarefas: 14
-};
+        // Ativa restrições de Chave Estrangeira em nível de conexão
+        await dbConnection.run('PRAGMA foreign_keys = ON;');
+
+        // Criação de tabelas caso não existam
+        await dbConnection.exec(`
+            CREATE TABLE IF NOT EXISTS usuarios (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome TEXT NOT NULL,
+                email TEXT NOT NULL UNIQUE,
+                telefone TEXT,
+                senha TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS tarefas (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                titulo TEXT NOT NULL,
+                concluida INTEGER NOT NULL DEFAULT 0,
+                usuarioId INTEGER NOT NULL,
+                FOREIGN KEY (usuarioId) REFERENCES usuarios (id) ON DELETE CASCADE
+            );
+        `);
+    }
+    return dbConnection;
+}
