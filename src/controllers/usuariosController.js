@@ -1,4 +1,7 @@
+import bcrypt from 'bcrypt';
 import { getDatabase } from '../data/db.js';
+
+const SALT_ROUNDS = 10;
 
 export async function listar(req, res) {
     try {
@@ -31,9 +34,11 @@ export async function criar(req, res) {
 
     try {
         const db = await getDatabase();
+        const senhaCriptografada = await bcrypt.hash(senha, SALT_ROUNDS);
+        console.log(senhaCriptografada)
         const resultado = await db.run(
             'INSERT INTO usuarios (nome, email, telefone, senha) VALUES (?, ?, ?, ?)',
-            [nome, email, telefone, senha]
+            [nome, email, telefone, senhaCriptografada]
         );
         res.status(201).json({ id: resultado.lastID, nome, email, telefone });
     } catch (erro) {
@@ -56,7 +61,11 @@ export async function atualizar(req, res) {
         const novoNome = nome ?? usuarioAtual.nome;
         const novoEmail = email ?? usuarioAtual.email;
         const novoTelefone = telefone ?? usuarioAtual.telefone;
-        const novaSenha = senha ?? usuarioAtual.senha;
+        let novaSenha = usuarioAtual.senha;
+
+        if (senha) {
+            novaSenha = await bcrypt.hash(senha, SALT_ROUNDS);
+        }
 
         await db.run(
             'UPDATE usuarios SET nome = ?, email = ?, telefone = ?, senha = ? WHERE id = ?',
